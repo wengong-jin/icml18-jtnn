@@ -16,12 +16,10 @@ We highly recommend you to use conda for package management.
 
 # Quick Start
 This repository contains the following directories:
-* `bo/` includes scripts for Bayesian optimization experiments.
-* `molvae/` includes scripts for training our VAE model only.
-* `molopt/` includes scripts for jointly training our VAE and property predictors.
+* `bo/` includes scripts for Bayesian optimization experiments. Please read `bo/README.md` for details.
+* `molvae/` includes scripts for training our VAE model only. Please read `molvae/README.md` for training our VAE model.
+* `molopt/` includes scripts for jointly training our VAE and property predictors. Please read `molopt/README.md` for details.
 * `jtnn/` contains codes for model formulation.
-
-`molvae/README.md` shows how to run our VAE model to generate new molecules.
 
 # Contact
 Wengong Jin (wengong@csail.mit.edu)
