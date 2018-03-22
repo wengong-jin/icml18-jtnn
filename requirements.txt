@@ -1,0 +1,3 @@
+rdkit
+numpy
+torch
