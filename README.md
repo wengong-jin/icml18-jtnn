@@ -10,6 +10,10 @@ Implementation of our Junction Tree Variational Autoencoder [https://arxiv.org/a
 * Python (version >= 2.7)
 * PyTorch (version >= 0.2)
 
+To install RDKit, please follow the instructions here [http://www.rdkit.org/docs/Install.html](http://www.rdkit.org/docs/Install.html)
+
+We highly recommend you to use conda for package management.
+
 # Quick Start
 This repository contains the following directories:
 * `bo/` includes scripts for Bayesian optimization experiments.
