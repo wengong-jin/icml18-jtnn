@@ -131,16 +131,12 @@ if __name__ == "__main__":
     lg = rdkit.RDLogger.logger() 
     lg.setLevel(rdkit.RDLogger.CRITICAL)
 
-    def get_vocab():
-        cset = set()
-        for line in sys.stdin:
-            smiles = line.split()[0]
-            mol = MolTree(smiles)
-            for c in mol.nodes:
-                cset.add(c.smiles)
-        for x in cset:
-            print x
-
-    smiles = [line.strip("\r\n ") for line in sys.stdin]
-    vocab = Vocab(smiles)
+    cset = set()
+    for line in sys.stdin:
+        smiles = line.split()[0]
+        mol = MolTree(smiles)
+        for c in mol.nodes:
+            cset.add(c.smiles)
+    for x in cset:
+        print x
 
