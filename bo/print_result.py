@@ -28,7 +28,9 @@ for i in xrange(1,11):
 
 all_smiles = [(x,-y) for x,y in all_smiles]
 all_smiles = sorted(all_smiles, key=lambda x:x[1], reverse=True)
-mols = [Chem.MolFromSmiles(s) for s,_ in all_smiles[:50]]
-vals = ["%.2f" % y for _,y in all_smiles[:50]]
-img = Draw.MolsToGridImage(mols, molsPerRow=5, subImgSize=(200,135), legends=vals, useSVG=True)
-print img
+for s,v in all_smiles:
+    print s,v
+#mols = [Chem.MolFromSmiles(s) for s,_ in all_smiles[:50]]
+#vals = ["%.2f" % y for _,y in all_smiles[:50]]
+#img = Draw.MolsToGridImage(mols, molsPerRow=5, subImgSize=(200,135), legends=vals, useSVG=True)
+#print img
