@@ -7,7 +7,7 @@ Implementation of our Junction Tree Variational Autoencoder [https://arxiv.org/a
 # Requirements
 * Linux (We only tested on Ubuntu)
 * RDKit (version >= 2017.09)
-* Python (version >= 2.7)
+* Python (version >= 3.6)
 * PyTorch (version >= 0.2)
 
 To install RDKit, please follow the instructions here [http://www.rdkit.org/docs/Install.html](http://www.rdkit.org/docs/Install.html)
