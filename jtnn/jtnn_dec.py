@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
-from mol_tree import Vocab, MolTree, MolTreeNode
-from nnutils import create_var, GRU
-from chemutils import enum_assemble
+from .mol_tree import Vocab, MolTree, MolTreeNode
+from .nnutils import create_var, GRU
+from .chemutils import enum_assemble
 import copy
 
 MAX_NB = 8
@@ -70,7 +70,7 @@ class JTNNDecoder(nn.Module):
         padding = create_var(torch.zeros(self.hidden_size), False)
         h = {}
 
-        for t in xrange(max_iter):
+        for t in range(max_iter):
             prop_list = []
             batch_list = []
             for i,plist in enumerate(traces):
@@ -203,7 +203,7 @@ class JTNNDecoder(nn.Module):
 
         all_nodes = [root]
         h = {}
-        for step in xrange(MAX_DECODE_LEN):
+        for step in range(MAX_DECODE_LEN):
             node_x,fa_slot = stack[-1]
             cur_h_nei = [ h[(node_y.idx,node_x.idx)] for node_y in node_x.neighbors ]
             if len(cur_h_nei) > 0:
@@ -299,7 +299,7 @@ def have_slots(fa_slots, ch_slots):
 
     if len(matches) == 0: return False
 
-    fa_match,ch_match = zip(*matches)
+    fa_match,ch_match = list(zip(*matches))
     if len(set(fa_match)) == 1 and 1 < len(fa_slots) <= 2: #never remove atom from ring
         fa_slots.pop(fa_match[0])
     if len(set(ch_match)) == 1 and 1 < len(ch_slots) <= 2: #never remove atom from ring

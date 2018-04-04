@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 from collections import deque
-from mol_tree import Vocab, MolTree
-from nnutils import create_var, GRU
+from .mol_tree import Vocab, MolTree
+from .nnutils import create_var, GRU
 
 MAX_NB = 8
 
@@ -35,7 +35,7 @@ class JTNNEncoder(nn.Module):
         max_depth = max([len(x) for x in orders])
         padding = create_var(torch.zeros(self.hidden_size), False)
 
-        for t in xrange(max_depth):
+        for t in range(max_depth):
             prop_list = []
             for order in orders:
                 if t < len(order):
