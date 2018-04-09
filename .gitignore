@@ -6,3 +6,5 @@ bo/logP_values.txt
 bo/SA_scores.txt
 bo/cycle_scores.txt
 bo/targets.txt
+*/__pycache__/*
+__pycache__/*
