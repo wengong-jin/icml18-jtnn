@@ -1,5 +1,9 @@
 import pickle
 import gzip
+
+import torch
+import torch.nn as nn
+
 from sparse_gp import SparseGP
 import scipy.stats as sps
 import numpy as np
@@ -9,8 +13,6 @@ import rdkit
 from rdkit.Chem import MolFromSmiles, MolToSmiles
 from rdkit.Chem import Descriptors
 
-import torch
-import torch.nn as nn
 from jtnn import create_var, JTNNVAE, Vocab
 
 from optparse import OptionParser
