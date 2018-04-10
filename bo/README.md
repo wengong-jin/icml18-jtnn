@@ -6,7 +6,12 @@ This requires you to install their customized Theano library.
 Please see https://github.com/mkusner/grammarVAE#bayesian-optimization for installation.
 
 ## Usage
-First generate the latent representation of all training molecules:
+Suppose the repository is downloaded to the `$PREFIX/icml18-jtnn` directory. First set up the environment variables:
+```
+export PYTHONPATH=$PREFIX/icml18-jtnn
+```
+
+Next, generate the latent representation of all training molecules:
 ```
 python gen_latent.py --data ../data/train.txt --vocab ../data/vocab.txt \
 --hidden 450 --depth 3 --latent 56 \
