@@ -1,13 +1,14 @@
+from __future__ import division
 import torch
 import torch.nn as nn
-from mol_tree import Vocab, MolTree
-from nnutils import create_var
-from jtnn_enc import JTNNEncoder
-from jtnn_dec import JTNNDecoder
-from mpn import MPN, mol2graph
-from jtmpn import JTMPN
+from .mol_tree import Vocab, MolTree
+from .nnutils import create_var
+from .jtnn_enc import JTNNEncoder
+from .jtnn_dec import JTNNDecoder
+from .mpn import MPN, mol2graph
+from .jtmpn import JTMPN
 
-from chemutils import enum_assemble, set_atommap, copy_edit_mol, attach_mols, atom_equal, decode_stereo
+from .chemutils import enum_assemble, set_atommap, copy_edit_mol, attach_mols, atom_equal, decode_stereo
 import rdkit
 import rdkit.Chem as Chem
 from rdkit import DataStructs
@@ -35,12 +36,12 @@ class JTNNVAE(nn.Module):
         self.jtnn = JTNNEncoder(vocab, hidden_size, self.embedding)
         self.jtmpn = JTMPN(hidden_size, depth)
         self.mpn = MPN(hidden_size, depth)
-        self.decoder = JTNNDecoder(vocab, hidden_size, latent_size / 2, self.embedding)
+        self.decoder = JTNNDecoder(vocab, hidden_size, latent_size // 2, self.embedding)
 
-        self.T_mean = nn.Linear(hidden_size, latent_size / 2)
-        self.T_var = nn.Linear(hidden_size, latent_size / 2)
-        self.G_mean = nn.Linear(hidden_size, latent_size / 2)
-        self.G_var = nn.Linear(hidden_size, latent_size / 2)
+        self.T_mean = nn.Linear(hidden_size, latent_size // 2)
+        self.T_var = nn.Linear(hidden_size, latent_size // 2)
+        self.G_mean = nn.Linear(hidden_size, latent_size // 2)
+        self.G_var = nn.Linear(hidden_size, latent_size // 2)
         
         self.assm_loss = nn.CrossEntropyLoss(size_average=False)
         self.stereo_loss = nn.CrossEntropyLoss(size_average=False)
@@ -78,9 +79,9 @@ class JTNNVAE(nn.Module):
         z_log_var = torch.cat([tree_log_var,mol_log_var], dim=1)
         kl_loss = -0.5 * torch.sum(1.0 + z_log_var - z_mean * z_mean - torch.exp(z_log_var)) / batch_size
 
-        epsilon = create_var(torch.randn(batch_size, self.latent_size / 2), False)
+        epsilon = create_var(torch.randn(batch_size, self.latent_size // 2), False)
         tree_vec = tree_mean + torch.exp(tree_log_var / 2) * epsilon
-        epsilon = create_var(torch.randn(batch_size, self.latent_size / 2), False)
+        epsilon = create_var(torch.randn(batch_size, self.latent_size // 2), False)
         mol_vec = mol_mean + torch.exp(mol_log_var / 2) * epsilon
         
         word_loss, topo_loss, word_acc, topo_acc = self.decoder(mol_batch, tree_vec)
@@ -108,8 +109,8 @@ class JTNNVAE(nn.Module):
         batch_idx = create_var(torch.LongTensor(batch_idx))
         mol_vec = mol_vec.index_select(0, batch_idx)
 
-        mol_vec = mol_vec.view(-1, 1, self.latent_size / 2)
-        cand_vec = cand_vec.view(-1, self.latent_size / 2, 1)
+        mol_vec = mol_vec.view(-1, 1, self.latent_size // 2)
+        cand_vec = cand_vec.view(-1, self.latent_size // 2, 1)
         scores = torch.bmm(mol_vec, cand_vec).squeeze()
         
         cnt,tot,acc = 0,0,0
@@ -130,7 +131,7 @@ class JTNNVAE(nn.Module):
                 all_loss.append( self.assm_loss(cur_score.view(1,-1), label) )
         
         all_loss = torch.cat(all_loss).sum() / len(mol_batch)
-        return all_loss, acc * 1.0 / cnt
+        return all_loss, acc / cnt
 
     def stereo(self, mol_batch, mol_vec):
         stereo_cands,batch_idx = [],[]
@@ -175,9 +176,9 @@ class JTNNVAE(nn.Module):
         mol_mean = self.G_mean(mol_vec)
         mol_log_var = -torch.abs(self.G_var(mol_vec)) #Following Mueller et al.
 
-        epsilon = create_var(torch.randn(1, self.latent_size / 2), False)
+        epsilon = create_var(torch.randn(1, self.latent_size // 2), False)
         tree_vec = tree_mean + torch.exp(tree_log_var / 2) * epsilon
-        epsilon = create_var(torch.randn(1, self.latent_size / 2), False)
+        epsilon = create_var(torch.randn(1, self.latent_size // 2), False)
         mol_vec = mol_mean + torch.exp(mol_log_var / 2) * epsilon
         return self.decode(tree_vec, mol_vec, prob_decode)
 
@@ -192,26 +193,26 @@ class JTNNVAE(nn.Module):
         mol_log_var = -torch.abs(self.G_var(mol_vec)) #Following Mueller et al.
         
         all_smiles = []
-        for i in xrange(10):
-            epsilon = create_var(torch.randn(1, self.latent_size / 2), False)
+        for i in range(10):
+            epsilon = create_var(torch.randn(1, self.latent_size // 2), False)
             tree_vec = tree_mean + torch.exp(tree_log_var / 2) * epsilon
-            epsilon = create_var(torch.randn(1, self.latent_size / 2), False)
+            epsilon = create_var(torch.randn(1, self.latent_size // 2), False)
             mol_vec = mol_mean + torch.exp(mol_log_var / 2) * epsilon
-            for j in xrange(10):
+            for j in range(10):
                 new_smiles = self.decode(tree_vec, mol_vec, prob_decode=True)
                 all_smiles.append(new_smiles)
         return all_smiles
 
     def sample_prior(self, prob_decode=False):
-        tree_vec = create_var(torch.randn(1, self.latent_size / 2), False)
-        mol_vec = create_var(torch.randn(1, self.latent_size / 2), False)
+        tree_vec = create_var(torch.randn(1, self.latent_size // 2), False)
+        mol_vec = create_var(torch.randn(1, self.latent_size // 2), False)
         return self.decode(tree_vec, mol_vec, prob_decode)
 
     def sample_eval(self):
-        tree_vec = create_var(torch.randn(1, self.latent_size / 2), False)
-        mol_vec = create_var(torch.randn(1, self.latent_size / 2), False)
+        tree_vec = create_var(torch.randn(1, self.latent_size // 2), False)
+        mol_vec = create_var(torch.randn(1, self.latent_size // 2), False)
         all_smiles = []
-        for i in xrange(100):
+        for i in range(100):
             s = self.decode(tree_vec, mol_vec, prob_decode=True)
             all_smiles.append(s)
         return all_smiles
@@ -265,7 +266,7 @@ class JTNNVAE(nn.Module):
         cands = enum_assemble(cur_node, neighbors, prev_nodes, cur_amap)
         if len(cands) == 0:
             return None
-        cand_smiles,cand_mols,cand_amap = zip(*cands)
+        cand_smiles,cand_mols,cand_amap = list(zip(*cands))
 
         cands = [(candmol, all_nodes, cur_node) for candmol in cand_mols]
 
@@ -281,7 +282,7 @@ class JTNNVAE(nn.Module):
             _,cand_idx = torch.sort(scores, descending=True)
 
         backup_mol = Chem.RWMol(cur_mol)
-        for i in xrange(cand_idx.numel()):
+        for i in range(cand_idx.numel()):
             cur_mol = Chem.RWMol(backup_mol)
             pred_amap = cand_amap[cand_idx[i].data[0]]
             new_global_amap = copy.deepcopy(global_amap)
