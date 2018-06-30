@@ -42,4 +42,4 @@ model = model.cuda()
 
 torch.manual_seed(0)
 for i in xrange(nsample):
-    print model.sample_prior()
+    print model.sample_prior(prob_decode=True)
