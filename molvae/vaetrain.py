@@ -25,7 +25,6 @@ parser.add_option("-w", "--hidden", dest="hidden_size", default=200)
 parser.add_option("-l", "--latent", dest="latent_size", default=56)
 parser.add_option("-d", "--depth", dest="depth", default=3)
 parser.add_option("-z", "--beta", dest="beta", default=1.0)
-parser.add_option("-a", "--anneal", dest="anneal", default=0)
 parser.add_option("-q", "--lr", dest="lr", default=1e-3)
 opts,args = parser.parse_args()
    
@@ -99,7 +98,6 @@ for epoch in xrange(MAX_EPOCH):
             scheduler.step()
             print "learning rate: %.6f" % scheduler.get_lr()[0]
             torch.save(model.state_dict(), opts.save_path + "/model.iter-%d-%d" % (epoch, it + 1))
-            beta = max(1.0, beta + anneal)
 
     scheduler.step()
     print "learning rate: %.6f" % scheduler.get_lr()[0]
