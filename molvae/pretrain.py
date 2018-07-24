@@ -54,7 +54,7 @@ MAX_EPOCH = 3
 PRINT_ITER = 20
 
 for epoch in xrange(MAX_EPOCH):
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=lambda x:x, drop_last=True)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=lambda x:x, drop_last=True)
 
     word_acc,topo_acc,assm_acc,steo_acc = 0,0,0,0
 
