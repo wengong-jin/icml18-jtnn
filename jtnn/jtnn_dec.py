@@ -178,7 +178,7 @@ class JTNNDecoder(nn.Module):
         stop_targets = create_var(torch.Tensor(stop_targets))
         
         stop_loss = self.stop_loss(stop_scores, stop_targets) / len(mol_batch)
-        stops = torch.ge(stop_scores, 0.5).float()
+        stops = torch.ge(stop_scores, 0).float()
         stop_acc = torch.eq(stops, stop_targets).float()
         stop_acc = torch.sum(stop_acc) / stop_targets.nelement()
 
