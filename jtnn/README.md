@@ -2,6 +2,6 @@
 
 To perform tree decomposition over a set of molecules, run
 ```
-python mol_tree.py < ../data/train.txt
+python mol_tree.py < ../data/all.txt
 ```
-This gives you the vocabulary of all cluster labels.
+This gives you the vocabulary of all cluster labels over the entire dataset.
