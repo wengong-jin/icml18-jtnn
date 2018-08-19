@@ -57,7 +57,7 @@ optimizer = optim.Adam(model.parameters(), lr=lr)
 scheduler = lr_scheduler.ExponentialLR(optimizer, 0.9)
 scheduler.step()
 
-dataset = MoleculeDataset(opts.train_path, opts.prop_path)
+dataset = PropDataset(opts.train_path, opts.prop_path)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=lambda x:x, drop_last=True)
 
 MAX_EPOCH = 6
