@@ -12,7 +12,7 @@ To perform tree decomposition over a set of molecules, run
 ```
 python ../jtnn/mol_tree.py < ../data/all.txt
 ```
-This gives you the vocabulary of cluster labels over the dataset `all.txt`. Note that it will give you warnings when it encounters a molecule with high tree-width. It is recommended to remove them from the dataset, as training JT-VAE on high tree-width molecules will cause out-of-memory error. 
+This gives you the vocabulary of cluster labels over the dataset `all.txt`.
 
 ## Training
 We trained VAE model in two phases:
