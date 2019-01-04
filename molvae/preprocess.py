@@ -35,42 +35,25 @@ if __name__ == "__main__":
 
     parser = OptionParser()
     parser.add_option("-t", "--train", dest="train_path")
-    parser.add_option("-n", "--split", dest="nsplits")
-    parser.add_option("-m", "--mode", dest="mode")
+    parser.add_option("-n", "--split", dest="nsplits", default=10)
+    parser.add_option("-j", "--jobs", dest="njobs", default=8)
     opts,args = parser.parse_args()
+    opts.njobs = int(opts.njobs)
 
-    pool = Pool(50)
+    pool = Pool(opts.njobs)
     num_splits = int(opts.nsplits)
 
-    if opts.mode == 'pair':
-        #dataset contains molecule pairs
-        with open(opts.train_path) as f:
-            data = [line.strip("\r\n ").split()[:2] for line in f]
+    with open(opts.train_path) as f:
+        data = [line.strip("\r\n ").split()[0] for line in f]
 
-        all_data = pool.map(tensorize_pair, data)
+    all_data = pool.map(tensorize, data)
 
-        le = (len(all_data) + num_splits - 1) / num_splits
+    le = (len(all_data) + num_splits - 1) / num_splits
 
-        for split_id in xrange(num_splits):
-            st = split_id * le
-            sub_data = all_data[st : st + le]
+    for split_id in xrange(num_splits):
+        st = split_id * le
+        sub_data = all_data[st : st + le]
 
-            with open('tensors-%d.pkl' % split_id, 'wb') as f:
-                pickle.dump(sub_data, f, pickle.HIGHEST_PROTOCOL)
-
-    elif opts.mode == 'single':
-        #dataset contains single molecules
-        with open(opts.train_path) as f:
-            data = [line.strip("\r\n ").split()[0] for line in f]
-
-        all_data = pool.map(tensorize, data)
-
-        le = (len(all_data) + num_splits - 1) / num_splits
-
-        for split_id in xrange(num_splits):
-            st = split_id * le
-            sub_data = all_data[st : st + le]
-
-            with open('tensors-%d.pkl' % split_id, 'wb') as f:
-                pickle.dump(sub_data, f, pickle.HIGHEST_PROTOCOL)
+        with open('tensors-%d.pkl' % split_id, 'wb') as f:
+            pickle.dump(sub_data, f, pickle.HIGHEST_PROTOCOL)
 
