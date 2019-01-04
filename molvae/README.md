@@ -17,11 +17,11 @@ This gives you the vocabulary of cluster labels over the dataset `all.txt`.
 ## Training
 Step 1: Preprocess the data:
 ```
-python preprocess.py --train ../data/train.txt --splits 30 --jobs 8 
+python preprocess.py --train ../data/train.txt --split 30 --jobs 8 
 mkdir zinc-processed
 mv tensor* zinc-processed
 ```
-This script will preprocess the training data (subgraph enumeration & tree decomposition), and save results into a list of files. We suggest you to use larger value for `--splits` if you are working with larger datasets.
+This script will preprocess the training data (subgraph enumeration & tree decomposition), and save results into a list of files. We suggest you to use larger value for `--split` if you are working with larger datasets.
 
 Step 2: Train VAE model with KL annealing strategy. 
 ```
