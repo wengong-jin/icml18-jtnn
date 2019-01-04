@@ -1,8 +1,12 @@
 # Junction Tree Variational Autoencoder for Molecular Graph Generation
 
-<img src="https://github.com/wengong-jin/icml18-jtnn/blob/master/paradigm.png" width="400">
+Official implementation of our Junction Tree Variational Autoencoder [https://arxiv.org/abs/1802.04364](https://arxiv.org/abs/1802.04364)
 
-Implementation of our Junction Tree Variational Autoencoder [https://arxiv.org/abs/1802.04364](https://arxiv.org/abs/1802.04364)
+# Accelerated Version
+We have accelerated our code! Please check out the new branch fast_jtnn:
+```
+git checkout fast_jtnn
+```
 
 # Requirements
 * Linux (We only tested on Ubuntu)
