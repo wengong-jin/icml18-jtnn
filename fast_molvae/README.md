@@ -28,6 +28,7 @@ mkdir vae_model/
 python pretrain.py --train moses-processed --vocab ../data/vocab.txt --hidden 450 --save_dir vae_model/
 ```
 Default Options:
+
 `--beta 0` means to set KL regularization weight (beta) initially to be zero.
 
 `--warmup 20000` means that beta will not increase within first 20000 training steps. It is recommended because using large KL regularization (large beta) in the beginning of training is harmful for model performance.
