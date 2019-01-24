@@ -3,7 +3,7 @@ Suppose the repository is downloaded at `$PREFIX/icml18-jtnn` directory. First s
 ```
 export PYTHONPATH=$PREFIX/icml18-jtnn
 ```
-The MOSES dataset is in `icml18-jtnn/data/moses` (
+The MOSES dataset is in `icml18-jtnn/data/moses` (copied from https://github.com/molecularsets/moses).
 
 ## Deriving Vocabulary 
 If you are running our code on a new dataset, you need to compute the vocabulary from your dataset.
