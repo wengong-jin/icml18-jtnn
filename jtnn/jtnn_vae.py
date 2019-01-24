@@ -146,7 +146,7 @@ class JTNNVAE(nn.Module):
             labels.append( (cands.index(mol_tree.smiles3D), len(cands)) )
 
         if len(labels) == 0: 
-            return create_var(torch.Tensor(0)), 1.0
+            return create_var(torch.zeros(1)), 1.0
 
         batch_idx = create_var(torch.LongTensor(batch_idx))
         stereo_cands = self.mpn(mol2graph(stereo_cands))

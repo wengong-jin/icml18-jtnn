@@ -131,19 +131,12 @@ if __name__ == "__main__":
     lg = rdkit.RDLogger.logger() 
     lg.setLevel(rdkit.RDLogger.CRITICAL)
 
-    sys.stderr.write('Running tree decomposition on the dataset. Molecules with high tree-width will be reported. It is recommended to remove them from the dataset, as training JT-VAE on high tree-width molecules will cause out-of-memory error.\n')
-    MAX_TREE_WIDTH = 15
-
     cset = set()
     for i,line in enumerate(sys.stdin):
         smiles = line.split()[0]
-        alert = False
         mol = MolTree(smiles)
         for c in mol.nodes:
-            if c.mol.GetNumAtoms() > MAX_TREE_WIDTH: alert = True
             cset.add(c.smiles)
-        if len(mol.nodes) > 1 and alert:
-            sys.stderr.write('[WARNING]: %d-th molecule %s has a high tree-width.\n' % (i + 1, smiles))
     for x in cset:
         print x
 

@@ -12,7 +12,7 @@ To perform tree decomposition over a set of molecules, run
 ```
 python ../jtnn/mol_tree.py < ../data/zinc/all.txt
 ```
-This gives you the vocabulary of cluster labels over the dataset `all.txt`. 
+This gives you the vocabulary of cluster labels over the dataset `all.txt`.
 
 ## Training
 We trained VAE model in two phases:
