@@ -8,7 +8,7 @@ We have accelerated our code! The new code is in `fast_jtnn/`, and the VAE train
 # Requirements
 * Linux (We only tested on Ubuntu)
 * RDKit (version >= 2017.09)
-* Python (version >= 2.7)
+* Python (version == 2.7)
 * PyTorch (version >= 0.2)
 
 To install RDKit, please follow the instructions here [http://www.rdkit.org/docs/Install.html](http://www.rdkit.org/docs/Install.html)
