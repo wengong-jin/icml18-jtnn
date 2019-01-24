@@ -10,7 +10,7 @@ We trained VAE model in two phases:
 Pretrain our model as follows (with hidden state dimension=420, latent code dimension=56, graph message passing depth=3):
 ```
 mkdir pre_model/
-CUDA_VISIBLE_DEVICES=0 python pretrain.py --train ../data/train.txt --vocab ../data/vocab.txt --prop ../data/train.logP-SA \
+CUDA_VISIBLE_DEVICES=0 python pretrain.py --train ../data/zinc/train.txt --vocab ../data/zinc/vocab.txt --prop ../data/zinc/train.logP-SA \
 --hidden 420 --depth 3 --latent 56 --batch 40 \
 --save_dir pre_model/
 ```
@@ -22,7 +22,7 @@ The final model is saved at pre_model/model.2
 We found setting beta > 0.01 greatly damages reconstruction accuracy.
 ```
 mkdir vae_model/
-CUDA_VISIBLE_DEVICES=0 python vaetrain.py --train ../data/train.txt --vocab ../data/vocab.txt --prop ../data/train.logP-SA \
+CUDA_VISIBLE_DEVICES=0 python vaetrain.py --train ../data/zinc/train.txt --vocab ../data/zinc/vocab.txt --prop ../data/zinc/train.logP-SA \
 --hidden 420 --depth 3 --latent 56 --batch 40 --lr 0.0007 --beta 0.005 \
 --model pre_model/model.2 --save_dir vae_model/
 ```
@@ -30,8 +30,8 @@ CUDA_VISIBLE_DEVICES=0 python vaetrain.py --train ../data/train.txt --vocab ../d
 ## Testing
 To optimize a set of molecules, run
 ```
-python optimize.py --test ../data/opt.test.log-SA --vocab ../data/vocab.txt \
+python optimize.py --test ../data/zinc/opt.test.log-SA --vocab ../data/zinc/vocab.txt \
 --hidden 420 --depth 3 --latent 56 --sim 0.2 \
 --model joint-h420-L56-d3-beta0.005/model.4
 ```
-Replace `opt.test.log-SA` with `opt.valid.log-SA` for development.
+Replace `opt.test.log-SA` with `opt.valid.log-SA` for validation.

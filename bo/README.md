@@ -8,7 +8,7 @@ Please see https://github.com/mkusner/grammarVAE#bayesian-optimization for insta
 ## Usage
 First generate the latent representation of all training molecules:
 ```
-python gen_latent.py --data ../data/train.txt --vocab ../data/vocab.txt \
+python gen_latent.py --data ../data/zinc/train.txt --vocab ../data/zinc/vocab.txt \
 --hidden 450 --depth 3 --latent 56 \
 --model ../molvae/MPNVAE-h450-L56-d3-beta0.005/model.iter-4
 ```
@@ -18,7 +18,7 @@ To run Bayesian optimization:
 ```
 SEED=1
 mkdir results$SEED
-python run_bo.py --vocab ../data/vocab.txt --save_dir results$SEED \
+python run_bo.py --vocab ../data/zinc/vocab.txt --save_dir results$SEED \
 --hidden 450 --depth 3 --latent 56 --seed $SEED \
 --save_dir ../molvae/MPNVAE-h450-L56-d3-beta0.005/model.iter-4
 ```
