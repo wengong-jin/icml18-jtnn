@@ -25,7 +25,7 @@ This script will preprocess the training data (subgraph enumeration & tree decom
 Step 2: Train VAE model with KL annealing. 
 ```
 mkdir vae_model/
-python pretrain.py --train moses-processed --vocab ../data/vocab.txt --hidden 450 --save_dir vae_model/
+python vae_train.py --train moses-processed --vocab ../data/vocab.txt --save_dir vae_model/
 ```
 Default Options:
 
