@@ -24,7 +24,7 @@ def set_batch_nodeID(mol_batch, vocab):
 
 class JTNNVAE(nn.Module):
 
-    def __init__(self, vocab, hidden_size, latent_size, depth):
+    def __init__(self, vocab, hidden_size, latent_size, depth, stereo=True):
         super(JTNNVAE, self).__init__()
         self.vocab = vocab
         self.hidden_size = hidden_size
@@ -43,7 +43,9 @@ class JTNNVAE(nn.Module):
         self.G_var = nn.Linear(hidden_size, latent_size / 2)
         
         self.assm_loss = nn.CrossEntropyLoss(size_average=False)
-        self.stereo_loss = nn.CrossEntropyLoss(size_average=False)
+        self.stereo = stereo
+        if stereo:
+            self.stereo_loss = nn.CrossEntropyLoss(size_average=False)
     
     def encode(self, mol_batch):
         set_batch_nodeID(mol_batch, self.vocab)
@@ -85,12 +87,15 @@ class JTNNVAE(nn.Module):
         
         word_loss, topo_loss, word_acc, topo_acc = self.decoder(mol_batch, tree_vec)
         assm_loss, assm_acc = self.assm(mol_batch, mol_vec, tree_mess)
-        stereo_loss, stereo_acc = self.stereo(mol_batch, mol_vec)
+        if self.stereo:
+            stereo_loss, stereo_acc = self.stereo(mol_batch, mol_vec)
+        else:
+            stereo_loss, stereo_acc = 0, 0
 
         all_vec = torch.cat([tree_vec, mol_vec], dim=1)
         loss = word_loss + topo_loss + assm_loss + 2 * stereo_loss + beta * kl_loss 
 
-        return loss, kl_loss.data[0], word_acc, topo_acc, assm_acc, stereo_acc
+        return loss, kl_loss.item(), word_acc, topo_acc, assm_acc, stereo_acc
 
     def assm(self, mol_batch, mol_vec, tree_mess):
         cands = []
@@ -123,7 +128,7 @@ class JTNNVAE(nn.Module):
                 cur_score = scores.narrow(0, tot, ncand)
                 tot += ncand
 
-                if cur_score.data[label] >= cur_score.max().data[0]:
+                if cur_score[label].item() >= cur_score.max().item():
                     acc += 1
 
                 label = create_var(torch.LongTensor([label]))
@@ -242,6 +247,8 @@ class JTNNVAE(nn.Module):
         set_atommap(cur_mol)
         cur_mol = Chem.MolFromSmiles(Chem.MolToSmiles(cur_mol))
         if cur_mol is None: return None
+        if self.stereo == False:
+            return Chem.MolToSmiles(cur_mol)
 
         smiles2D = Chem.MolToSmiles(cur_mol)
         stereo_cands = decode_stereo(smiles2D)
@@ -285,7 +292,7 @@ class JTNNVAE(nn.Module):
         backup_mol = Chem.RWMol(cur_mol)
         for i in xrange(cand_idx.numel()):
             cur_mol = Chem.RWMol(backup_mol)
-            pred_amap = cand_amap[cand_idx[i].data[0]]
+            pred_amap = cand_amap[cand_idx[i].item()]
             new_global_amap = copy.deepcopy(global_amap)
 
             for nei_id,ctr_atom,nei_atom in pred_amap:

@@ -182,7 +182,7 @@ class JTNNDecoder(nn.Module):
         stop_acc = torch.eq(stops, stop_targets).float()
         stop_acc = torch.sum(stop_acc) / stop_targets.nelement()
 
-        return pred_loss, stop_loss, pred_acc.data[0], stop_acc.data[0]
+        return pred_loss, stop_loss, pred_acc.item(), stop_acc.item()
     
     def decode(self, mol_vec, prob_decode):
         stack,trace = [],[]
@@ -194,7 +194,7 @@ class JTNNDecoder(nn.Module):
         root_hidden = nn.ReLU()(self.W(root_hidden))
         root_score = self.W_o(root_hidden)
         _,root_wid = torch.max(root_score, dim=1)
-        root_wid = root_wid.data[0]
+        root_wid = root_wid.item()
 
         root = MolTreeNode(self.vocab.get_smiles(root_wid))
         root.wid = root_wid
@@ -223,7 +223,7 @@ class JTNNDecoder(nn.Module):
             if prob_decode:
                 backtrack = (torch.bernoulli(1.0 - stop_score.data)[0] == 1)
             else:
-                backtrack = (stop_score.data[0] < 0.5)
+                backtrack = (stop_score.item() < 0.5)
 
             if not backtrack: #Forward: Predict next clique
                 new_h = GRU(cur_x, cur_h_nei, self.W_z, self.W_r, self.U_r, self.W_h)

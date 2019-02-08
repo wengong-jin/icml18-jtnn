@@ -45,7 +45,7 @@ class JTNNDecoder(nn.Module):
         elif mode == 'stop':
             V, V_o = self.U, self.U_o
         else:
-            raise ValueError('attention mode is wrong')
+            raise ValueError('aggregate mode is wrong')
 
         tree_contexts = x_tree_vecs.index_select(0, contexts)
         input_vec = torch.cat([hiddens, tree_contexts], dim=-1)

@@ -26,6 +26,7 @@ parser.add_option("-l", "--latent", dest="latent_size", default=56)
 parser.add_option("-d", "--depth", dest="depth", default=3)
 parser.add_option("-z", "--beta", dest="beta", default=1.0)
 parser.add_option("-q", "--lr", dest="lr", default=1e-3)
+parser.add_option("-e", "--stereo", dest="stereo", default=1)
 opts,args = parser.parse_args()
    
 vocab = [x.strip("\r\n ") for x in open(opts.vocab_path)] 
@@ -37,9 +38,9 @@ latent_size = int(opts.latent_size)
 depth = int(opts.depth)
 beta = float(opts.beta)
 lr = float(opts.lr)
-anneal = float(opts.anneal)
+stereo = True if int(opts.stereo) == 1 else False
 
-model = JTNNVAE(vocab, hidden_size, latent_size, depth)
+model = JTNNVAE(vocab, hidden_size, latent_size, depth, stereo=stereo)
 
 if opts.model_path is not None:
     model.load_state_dict(torch.load(opts.model_path))
@@ -74,10 +75,14 @@ for epoch in xrange(MAX_EPOCH):
                     node.cands.append(node.label)
                     node.cand_mols.append(node.label_mol)
 
-        model.zero_grad()
-        loss, kl_div, wacc, tacc, sacc, dacc = model(batch, beta)
-        loss.backward()
-        optimizer.step()
+        try:
+            model.zero_grad()
+            loss, kl_div, wacc, tacc, sacc, dacc = model(batch, beta)
+            loss.backward()
+            optimizer.step()
+        except Exception as e:
+            print e
+            continue
 
         word_acc += wacc
         topo_acc += tacc
@@ -94,9 +99,11 @@ for epoch in xrange(MAX_EPOCH):
             word_acc,topo_acc,assm_acc,steo_acc = 0,0,0,0
             sys.stdout.flush()
 
-        if (it + 1) % 1500 == 0: #Fast annealing
+        if (it + 1) % 15000 == 0: #Fast annealing
             scheduler.step()
             print "learning rate: %.6f" % scheduler.get_lr()[0]
+
+        if (it + 1) % 1000 == 0: #Fast annealing
             torch.save(model.state_dict(), opts.save_path + "/model.iter-%d-%d" % (epoch, it + 1))
 
     scheduler.step()
