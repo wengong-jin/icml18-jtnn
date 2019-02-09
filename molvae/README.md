@@ -61,7 +61,7 @@ python sample.py --nsample 30000 --vocab ../data/moses/vocab.txt \
 --hidden 450 --depth 3 --latent 56 --stereo 0 \
 --model moses-h450L56d3beta0.5/model.iter-2
 ```
-where `--stereo 0` means the model will not infer stereochemistry (because molecules in MOSES dataset does not contain stereochemistry). This should give you the same samples in `moses-h450L56d3beta0.5/samples.txt`. The result is as follows:
+where `--stereo 0` means the model will not infer stereochemistry (because molecules in MOSES dataset does not contain stereochemistry). This should give you the same samples in [moses-h450L56d3beta0.5/samples.txt](moses-h450L56d3beta0.5/samples.txt). The result is as follows:
 ```
 valid = 0.9991
 unique@1000 = 1.0
