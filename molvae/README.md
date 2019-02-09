@@ -54,3 +54,32 @@ python reconstruct.py --test ../data/zinc/test.txt --vocab ../data/zinc/vocab.tx
 ```
 Replace `test.txt` with `valid.txt` to test the validation accuracy (for hyperparameter tuning).
 
+## MOSES Benchmark Results
+We also trained our model over MOSES benchmark dataset. The trained model is saved in `moses-h450L56d3beta0.5/`. To generate samples from our model, run
+```
+python sample.py --nsample 30000 --vocab ../data/moses/vocab.txt \
+--hidden 450 --depth 3 --latent 56 --stereo 0 \
+--model moses-h450L56d3beta0.5/model.iter-2
+```
+where `--stereo 0` means the model will not infer stereochemistry (because molecules in MOSES dataset does not contain stereochemistry). This should give you the same samples in `moses-h450L56d3beta0.5/samples.txt`. The result is as follows:
+```
+valid = 0.9991
+unique@1000 = 1.0
+unique@10000 = 0.9997
+FCD/Test = 0.9770302413177916
+SNN/Test = 0.522326049871644
+Frag/Test = 0.9950979926332992
+Scaf/Test = 0.8655089872053796
+FCD/TestSF = 1.5980327517965094
+SNN/TestSF = 0.4996388119246172
+Frag/TestSF = 0.9926974330760409
+Scaf/TestSF = 0.1174452677242035
+IntDiv = 0.8562054073435843
+IntDiv2 = 0.8503170074513857
+Filters = 0.9743769392453208
+logP = 0.02464815889709815
+SA = 0.15781023266502325
+QED = 2.1869624593648385e-05
+NP = 0.0962078166269753
+weight = 8.657725423864576
+```
