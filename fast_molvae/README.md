@@ -31,9 +31,9 @@ Default Options:
 
 `--beta 0` means to set KL regularization weight (beta) initially to be zero.
 
-`--warmup 20000` means that beta will not increase within first 20000 training steps. It is recommended because using large KL regularization (large beta) in the beginning of training is harmful for model performance.
+`--warmup 40000` means that beta will not increase within first 40000 training steps. It is recommended because using large KL regularization (large beta) in the beginning of training is harmful for model performance.
 
-`--step_beta 0.01 --kl_anneal_iter 5000` means beta will increase by 0.01 every 5000 training steps (batch updates). You should observe that the KL will decrease as beta increases.
+`--step_beta 0.002 --kl_anneal_iter 1000` means beta will increase by 0.002 every 1000 training steps (batch updates). You should observe that the KL will decrease as beta increases.
 
 `--max_beta 1.0 ` sets the maximum value of beta to be 1.0. 
 
