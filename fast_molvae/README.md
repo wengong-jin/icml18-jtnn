@@ -1,4 +1,4 @@
-# Molecule Generation
+# Accelerated Training of Junction Tree VAE
 Suppose the repository is downloaded at `$PREFIX/icml18-jtnn` directory. First set up environment variables:
 ```
 export PYTHONPATH=$PREFIX/icml18-jtnn
