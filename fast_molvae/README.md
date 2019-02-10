@@ -46,7 +46,7 @@ To sample new molecules with trained models, simply run
 ```
 python sample.py --nsample 30000 --vocab ../data/moses/vocab.txt --hidden 450 --model moses-h450z56/model.iter-400000 > mol_samples.txt
 ```
-This script prints in each line the SMILES string of each molecule. `model.iter-400000` is a model trained with 400K steps with the default hyperparameters. This should give you the same samples as in [moses-h450z56/sample.400000](moses-h450z56/sample.400000). The result is as follows:
+This script prints in each line the SMILES string of each molecule. `model.iter-400000` is a model trained with 400K steps with the default hyperparameters. This should give you the same samples as in [moses-h450z56/sample.txt](moses-h450z56/sample.txt). The result is as follows:
 ```
 valid = 1.0
 unique@1000 = 1.0
