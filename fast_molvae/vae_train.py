@@ -32,13 +32,13 @@ parser.add_argument('--depthG', type=int, default=3)
 parser.add_argument('--lr', type=float, default=1e-3)
 parser.add_argument('--clip_norm', type=float, default=50.0)
 parser.add_argument('--beta', type=float, default=0.0)
-parser.add_argument('--step_beta', type=float, default=0.002)
+parser.add_argument('--step_beta', type=float, default=0.001)
 parser.add_argument('--max_beta', type=float, default=1.0)
 parser.add_argument('--warmup', type=int, default=40000)
 
 parser.add_argument('--epoch', type=int, default=20)
 parser.add_argument('--anneal_rate', type=float, default=0.9)
-parser.add_argument('--anneal_iter', type=int, default=20000)
+parser.add_argument('--anneal_iter', type=int, default=40000)
 parser.add_argument('--kl_anneal_iter', type=int, default=1000)
 parser.add_argument('--print_iter', type=int, default=50)
 parser.add_argument('--save_iter', type=int, default=5000)
@@ -72,7 +72,7 @@ grad_norm = lambda m: math.sqrt(sum([p.grad.norm().item() ** 2 for p in m.parame
 
 total_step = args.load_epoch
 beta = args.beta
-meters = np.zeros(4)
+meters = np.zeros(5)
 
 for epoch in xrange(args.epoch):
     loader = MolTreeFolder(args.train, vocab, args.batch_size, num_workers=4)
@@ -80,7 +80,7 @@ for epoch in xrange(args.epoch):
         total_step += 1
         try:
             model.zero_grad()
-            loss, kl_div, wacc, tacc, sacc = model(batch, beta)
+            loss, tree_kl, mol_kl, wacc, tacc, sacc = model(batch, beta)
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), args.clip_norm)
             optimizer.step()
@@ -88,11 +88,11 @@ for epoch in xrange(args.epoch):
             print e
             continue
 
-        meters = meters + np.array([kl_div, wacc * 100, tacc * 100, sacc * 100])
+        meters = meters + np.array([tree_kl, mol_kl, wacc * 100, tacc * 100, sacc * 100])
 
         if total_step % args.print_iter == 0:
             meters /= args.print_iter
-            print "[%d] Beta: %.3f, KL: %.2f, Word: %.2f, Topo: %.2f, Assm: %.2f, PNorm: %.2f, GNorm: %.2f" % (total_step, beta, meters[0], meters[1], meters[2], meters[3], param_norm(model), grad_norm(model))
+            print "[%d] Beta: %.3f, KL: %.2f, %.2f, Word: %.2f, Topo: %.2f, Assm: %.2f, PNorm: %.2f, GNorm: %.2f" % (total_step, beta, meters[0], meters[1], meters[2], meters[3], meters[4], param_norm(model), grad_norm(model))
             sys.stdout.flush()
             meters *= 0
 

@@ -47,7 +47,10 @@ class MolTreeNode(object):
         singletons = [nei for nei in self.neighbors if nei.mol.GetNumAtoms() == 1]
         neighbors = singletons + neighbors
 
-        cands,_ = enum_assemble(self, neighbors)
+        cands,aroma = enum_assemble(self, neighbors)
+        new_cands = [cand for i,cand in enumerate(cands) if aroma[i] >= 0]
+        if len(new_cands) > 0: cands = new_cands
+
         if len(cands) > 0:
             self.cands, _ = zip(*cands)
             self.cands = list(self.cands)

@@ -18,6 +18,12 @@ class JTNNDecoder(nn.Module):
         self.vocab = vocab
         self.embedding = embedding
 
+        self.E_pos = nn.Embedding(15, hidden_size)
+        self.inputNN = nn.Sequential(
+                nn.Linear(hidden_size * 2, hidden_size),
+                nn.ReLU()
+        )
+
         #GRU Weights
         self.W_z = nn.Linear(2 * hidden_size, hidden_size)
         self.U_r = nn.Linear(hidden_size, hidden_size, bias=False)
@@ -84,7 +90,7 @@ class JTNNDecoder(nn.Module):
             cur_x = []
             cur_h_nei,cur_o_nei = [],[]
 
-            for node_x, real_y, _ in prop_list:
+            for node_x, real_y, d in prop_list:
                 #Neighbors for message passing (target not included)
                 cur_nei = [h[(node_y.idx,node_x.idx)] for node_y in node_x.neighbors if node_y.idx != real_y.idx]
                 pad_len = MAX_NB - len(cur_nei)
@@ -98,15 +104,22 @@ class JTNNDecoder(nn.Module):
                 cur_o_nei.extend([padding] * pad_len)
 
                 #Current clique embedding
-                cur_x.append(node_x.wid)
+                if d == 1:
+                    assert real_y.cid[0] == node_x.idx
+                    cur_x.append( (node_x.wid, 0) )
+                else:
+                    assert node_x.cid[0] == real_y.idx
+                    cur_x.append( (node_x.wid, node_x.cid[1]) )
 
             #Clique embedding
             cur_x = create_var(torch.LongTensor(cur_x))
-            cur_x = self.embedding(cur_x) 
+            cur_pos = self.E_pos(cur_x[:, 1])
+            cur_x = self.embedding(cur_x[:, 0]) 
+            cur_xpos = self.inputNN( torch.cat([cur_x, cur_pos], dim=-1) )
             
             #Message passing
             cur_h_nei = torch.stack(cur_h_nei, dim=0).view(-1,MAX_NB,self.hidden_size)
-            new_h = GRU(cur_x, cur_h_nei, self.W_z, self.W_r, self.U_r, self.W_h)
+            new_h = GRU(cur_xpos, cur_h_nei, self.W_z, self.W_r, self.U_r, self.W_h)
 
             #Node Aggregate
             cur_o_nei = torch.stack(cur_o_nei, dim=0).view(-1,MAX_NB,self.hidden_size)

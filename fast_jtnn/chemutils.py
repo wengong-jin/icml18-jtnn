@@ -296,7 +296,7 @@ def enum_assemble(node, neighbors, prev_nodes=[], prev_amap=[]):
             continue
         cand_smiles.add(smiles)
         candidates.append( (smiles,amap) )
-        aroma_score.append( check_aroma(cand_mol, cand_smiles, node, neighbors) )
+        aroma_score.append( check_aroma(cand_mol, node, neighbors) )
 
     return candidates, aroma_score 
 
@@ -313,7 +313,7 @@ def check_singleton(cand_mol, ctr_node, nei_nodes):
 
     return n_leaf2_atoms == 0
 
-def check_aroma(cand_mol, cand_smiles, ctr_node, nei_nodes):
+def check_aroma(cand_mol, ctr_node, nei_nodes):
     rings = [node for node in nei_nodes + [ctr_node] if node.mol.GetNumAtoms() >= 3]
     if len(rings) < 2: return 0 #Only multi-ring system needs to be checked
 
