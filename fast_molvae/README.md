@@ -48,24 +48,23 @@ python sample.py --nsample 30000 --vocab ../data/moses/vocab.txt --hidden 450 --
 ```
 This script prints in each line the SMILES string of each molecule. `model.iter-700000` is a model trained with 700K steps with the default hyperparameters. This should give you the same samples as in [moses-h450z56/sample.txt](moses-h450z56/sample.txt). The result is as follows:
 ```
-Metrics:
-        valid = 1.0
-        unique@1000 = 1.0
-        unique@10000 = 0.9997
-        FCD/Test = 0.3800917553788139
-        SNN/Test = 0.5457180621509751
-        Frag/Test = 0.9963242095910896
-        Scaf/Test = 0.9001930210894512
-        FCD/TestSF = 0.8921208835660508
-        SNN/TestSF = 0.5168567731201649
-        Frag/TestSF = 0.994497554378001
-        Scaf/TestSF = 0.09054490041034113
-        IntDiv = 0.8565619694117568
-        IntDiv2 = 0.850854312264597
-        Filters = 0.9752
-        logP = 0.008570273935345263
-        SA = 0.05201984105193769
-        QED = 2.729237229331591e-05
-        NP = 0.05078569561395441
-        weight = 1.199174988124014
+valid = 1.0
+unique@1000 = 1.0
+unique@10000 = 0.9992
+FCD/Test = 0.42235413520261034
+SNN/Test = 0.5560595345050097
+Frag/Test = 0.996223352989786
+Scaf/Test = 0.8924981494347503
+FCD/TestSF = 0.9962165008703465
+SNN/TestSF = 0.5272934146558245
+Frag/TestSF = 0.9947901514732745
+Scaf/TestSF = 0.10049873444911761
+IntDiv = 0.8511712225340441
+IntDiv2 = 0.8453088593783662
+Filters = 0.9778
+logP = 0.0054694810121243
+SA = 0.015992957588069068
+QED = 1.15692473423544e-05
+NP = 0.021087573878091237
+weight = 0.5403194879856983
 ```
