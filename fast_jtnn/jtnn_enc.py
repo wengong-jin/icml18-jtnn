@@ -18,11 +18,6 @@ class JTNNEncoder(nn.Module):
             nn.ReLU()
         )
         self.GRU = GraphGRU(hidden_size, hidden_size, depth=depth)
-        self.E_pos = nn.Embedding(15, hidden_size)
-        self.inputNN = nn.Sequential(
-            nn.Linear(2 * hidden_size, hidden_size),
-            nn.ReLU()
-        )
 
     def forward(self, fnode, fmess, node_graph, mess_graph, scope):
         fnode = create_var(fnode)
@@ -32,9 +27,7 @@ class JTNNEncoder(nn.Module):
         messages = create_var(torch.zeros(mess_graph.size(0), self.hidden_size))
 
         fnode = self.embedding(fnode)
-        fmess1 = index_select_ND(fnode, 0, fmess[:, 0])
-        fmess2 = self.E_pos(fmess[:, 1])
-        fmess = self.inputNN( torch.cat([fmess1,fmess2], dim=-1) )
+        fmess = index_select_ND(fnode, 0, fmess)
         messages = self.GRU(messages, fmess, mess_graph)
 
         mess_nei = index_select_ND(messages, 0, node_graph)
@@ -56,8 +49,6 @@ class JTNNEncoder(nn.Module):
         scope = []
         for tree in tree_batch:
             scope.append( (len(node_batch), len(tree.nodes)) )
-            tree.nodes[0].cid = (-1, 0)
-            dfs(tree.nodes[0], -1)
             node_batch.extend(tree.nodes)
 
         return JTNNEncoder.tensorize_nodes(node_batch, scope)
@@ -69,18 +60,16 @@ class JTNNEncoder(nn.Module):
         for x in node_batch:
             fnode.append(x.wid)
             for y in x.neighbors:
-                mess_dict[(y.idx,x.idx)] = len(messages)
-                cid = y.cid[1] if y.cid[0] == x.idx else 0
-                messages.append( (y, x, cid) )
+                mess_dict[(x.idx,y.idx)] = len(messages)
+                messages.append( (x,y) )
 
         node_graph = [[] for i in xrange(len(node_batch))]
         mess_graph = [[] for i in xrange(len(messages))]
         fmess = [0] * len(messages)
-        fmess[0] = (0,0)
 
-        for x,y,k in messages[1:]:
+        for x,y in messages[1:]:
             mid1 = mess_dict[(x.idx,y.idx)]
-            fmess[mid1] = (x.idx, k)
+            fmess[mid1] = x.idx 
             node_graph[y.idx].append(mid1)
             for z in y.neighbors:
                 if z.idx == x.idx: continue
@@ -139,11 +128,4 @@ class GraphGRU(nn.Module):
 
         return h
 
-def dfs(x, fa_idx):
-    tot = 0
-    for y in x.neighbors:
-        if y.idx == fa_idx: continue
-        tot += 1
-        y.cid = (x.idx, tot)
-        dfs(y, x.idx)
 
