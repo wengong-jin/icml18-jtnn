@@ -43,7 +43,7 @@ class JTNNVAE(nn.Module):
         self.G_var = nn.Linear(hidden_size, latent_size / 2)
         
         self.assm_loss = nn.CrossEntropyLoss(size_average=False)
-        self.stereo = stereo
+        self.use_stereo = stereo
         if stereo:
             self.stereo_loss = nn.CrossEntropyLoss(size_average=False)
     
@@ -87,7 +87,7 @@ class JTNNVAE(nn.Module):
         
         word_loss, topo_loss, word_acc, topo_acc = self.decoder(mol_batch, tree_vec)
         assm_loss, assm_acc = self.assm(mol_batch, mol_vec, tree_mess)
-        if self.stereo:
+        if self.use_stereo:
             stereo_loss, stereo_acc = self.stereo(mol_batch, mol_vec)
         else:
             stereo_loss, stereo_acc = 0, 0
@@ -247,7 +247,7 @@ class JTNNVAE(nn.Module):
         set_atommap(cur_mol)
         cur_mol = Chem.MolFromSmiles(Chem.MolToSmiles(cur_mol))
         if cur_mol is None: return None
-        if self.stereo == False:
+        if self.use_stereo == False:
             return Chem.MolToSmiles(cur_mol)
 
         smiles2D = Chem.MolToSmiles(cur_mol)

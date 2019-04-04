@@ -317,7 +317,7 @@ def check_aroma(cand_mol, ctr_node, nei_nodes):
     rings = [node for node in nei_nodes + [ctr_node] if node.mol.GetNumAtoms() >= 3]
     if len(rings) < 2: return 0 #Only multi-ring system needs to be checked
 
-    get_nid = lambda x:0 if node.is_leaf else node.nid
+    get_nid = lambda x: 0 if x.is_leaf else x.nid
     benzynes = [get_nid(node) for node in nei_nodes + [ctr_node] if node.smiles in Vocab.benzynes] 
     penzynes = [get_nid(node) for node in nei_nodes + [ctr_node] if node.smiles in Vocab.penzynes] 
     if len(benzynes) + len(penzynes) == 0: 
