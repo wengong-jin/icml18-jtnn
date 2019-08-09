@@ -163,7 +163,7 @@ class JTNNVAE(nn.Module):
         all_loss = []
         for label,le in labels:
             cur_scores = scores.narrow(0, st, le)
-            if cur_scores.data[label] >= cur_scores.max().data[0]: 
+            if cur_scores.data[label] >= cur_scores.max().data: 
                 acc += 1
             label = create_var(torch.LongTensor([label]))
             all_loss.append( self.stereo_loss(cur_scores.view(1,-1), label) )
@@ -258,7 +258,7 @@ class JTNNVAE(nn.Module):
         stereo_vecs = self.G_mean(stereo_vecs)
         scores = nn.CosineSimilarity()(stereo_vecs, mol_vec)
         _,max_id = scores.max(dim=0)
-        return stereo_cands[max_id.data[0]]
+        return stereo_cands[max_id.data]
 
     def dfs_assemble(self, tree_mess, mol_vec, all_nodes, cur_mol, global_amap, fa_amap, cur_node, fa_node, prob_decode):
         fa_nid = fa_node.nid if fa_node is not None else -1
