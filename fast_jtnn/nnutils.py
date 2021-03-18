@@ -4,10 +4,18 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 def create_var(tensor, requires_grad=None):
+    has_cuda = torch.cuda.is_available()
     if requires_grad is None:
-        return Variable(tensor).cuda()
+        if has_cuda:
+            return Variable(tensor).cuda()
+        else:
+            return Variable(tensor)
     else:
-        return Variable(tensor, requires_grad=requires_grad).cuda()
+        if has_cuda:
+            return Variable(tensor, requires_grad=requires_grad).cuda()
+        else:
+            return Variable(tensor, requires_grad=requires_grad)
+
 
 def index_select_ND(source, dim, index):
     index_size = index.size()
@@ -37,7 +45,7 @@ def flatten_tensor(tensor, scope):
     return torch.cat(tlist, dim=0)
 
 #2D matrix to 3D padded tensor
-def inflate_tensor(tensor, scope): 
+def inflate_tensor(tensor, scope):
     max_len = max([le for _,le in scope])
     batch_vecs = []
     for st,le in scope:
@@ -56,11 +64,10 @@ def GRU(x, h_nei, W_z, W_r, U_r, W_h):
     r_1 = W_r(x).view(-1,1,hidden_size)
     r_2 = U_r(h_nei)
     r = F.sigmoid(r_1 + r_2)
-    
+
     gated_h = r * h_nei
     sum_gated_h = gated_h.sum(dim=1)
     h_input = torch.cat([x,sum_gated_h], dim=1)
     pre_h = F.tanh(W_h(h_input))
     new_h = (1.0 - z) * sum_h + z * pre_h
     return new_h
-

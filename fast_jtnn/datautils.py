@@ -7,6 +7,7 @@ from mpn import MPN
 from jtmpn import JTMPN
 import cPickle as pickle
 import os, random
+from itertools import cycle
 
 class PairTreeFolder(object):
 
@@ -28,7 +29,7 @@ class PairTreeFolder(object):
             with open(fn) as f:
                 data = pickle.load(f)
 
-            if self.shuffle: 
+            if self.shuffle:
                 random.shuffle(data) #shuffle data before batch
 
             batches = [data[i : i + self.batch_size] for i in xrange(0, len(data), self.batch_size)]
@@ -45,38 +46,63 @@ class PairTreeFolder(object):
 
 class MolTreeFolder(object):
 
-    def __init__(self, data_folder, vocab, batch_size, num_workers=4, shuffle=True, assm=True, replicate=None):
+    def __init__(self, data_folder, vocab, label_idx=0, batch_size=4, shuffle=True, assm=True, replicate=None):
         self.data_folder = data_folder
         self.data_files = [fn for fn in os.listdir(data_folder)]
-        self.batch_size = batch_size
         self.vocab = vocab
-        self.num_workers = num_workers
+        self.batch_size = batch_size
         self.shuffle = shuffle
         self.assm = assm
 
         if replicate is not None: #expand is int
             self.data_files = self.data_files * replicate
 
-    def __iter__(self):
+        data = []
+
         for fn in self.data_files:
             fn = os.path.join(self.data_folder, fn)
             with open(fn) as f:
-                data = pickle.load(f)
+                subset_data = pickle.load(f)
+                data.append(np.array(subset_data).T)
 
-            if self.shuffle: 
-                random.shuffle(data) #shuffle data before batch
+        data = np.concatenate(data)
 
-            batches = [data[i : i + self.batch_size] for i in xrange(0, len(data), self.batch_size)]
-            if len(batches[-1]) < self.batch_size:
-                batches.pop()
+        if self.shuffle:
+            np.random.shuffle(data)
 
-            dataset = MolTreeDataset(batches, self.vocab, self.assm)
-            dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=self.num_workers, collate_fn=lambda x:x[0])
+        self.data = data
 
-            for b in dataloader:
-                yield b
+    def __repr__(self):
+        return len(self.data)
 
-            del data, batches, dataset, dataloader
+    def __iter__(self):
+
+        molecule_embeds = np.array([row[0] for row in self.data])
+        labels = np.array([row[1] for row in self.data])
+
+        labeled_indices = np.where(labels != "")
+        unlabeled_indices = np.where(labels == "")
+
+        # Split data based on labelled and unlabelled
+        supervised_moltree = np.array(molecule_embeds[labeled_indices])
+        unsupervised_moltree = np.array(molecule_embeds[unlabeled_indices])
+        supervised_labels = np.array(labels[labeled_indices], dtype=np.float)
+        placeholder_labels = np.array([0 for i in range(len(unlabeled_indices[0]))])
+
+        # Create batch
+        supervised_moltree = [supervised_moltree[i : i + self.batch_size] for i in xrange(0, len(supervised_moltree), self.batch_size)]
+        supervised_labels = [supervised_labels[i : i + self.batch_size] for i in xrange(0, len(supervised_labels), self.batch_size)]
+        unsupervised_moltree = [unsupervised_moltree[i : i + self.batch_size] for i in xrange(0, len(unsupervised_moltree), self.batch_size)]
+        placeholder_labels = [placeholder_labels[i : i + self.batch_size] for i in xrange(0, len(placeholder_labels), self.batch_size)]
+
+        supervised_dataset = MolTreeDataset(supervised_moltree, supervised_labels, self.vocab, self.assm)
+        unsupervised_dataset = MolTreeDataset(unsupervised_moltree, placeholder_labels, self.vocab, self.assm)
+        supervised_dataloader = DataLoader(supervised_dataset, batch_size=1, shuffle=False, collate_fn=lambda x:x[0])
+        unsupervised_dataloader = DataLoader(unsupervised_dataset, batch_size=1, shuffle=False, collate_fn=lambda x:x[0])
+
+        for supervised, unsupervised in zip(cycle(supervised_dataloader), unsupervised_dataloader):
+            yield (supervised, unsupervised)
+
 
 class PairTreeDataset(Dataset):
 
@@ -87,23 +113,27 @@ class PairTreeDataset(Dataset):
 
     def __len__(self):
         return len(self.data)
-    
+
     def __getitem__(self, idx):
         batch0, batch1 = zip(*self.data[idx])
         return tensorize(batch0, self.vocab, assm=False), tensorize(batch1, self.vocab, assm=self.y_assm)
 
+
 class MolTreeDataset(Dataset):
 
-    def __init__(self, data, vocab, assm=True):
+    def __init__(self, data, labels, vocab, assm=True):
         self.data = data
+        self.labels = labels
         self.vocab = vocab
         self.assm = assm
 
     def __len__(self):
         return len(self.data)
-    
+
     def __getitem__(self, idx):
-        return tensorize(self.data[idx], self.vocab, assm=self.assm)
+        return {'data': tensorize(self.data[idx], self.vocab, assm=self.assm),
+            'labels': self.labels[idx]}
+
 
 def tensorize(tree_batch, vocab, assm=True):
     set_batch_nodeID(tree_batch, vocab)

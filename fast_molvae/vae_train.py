@@ -14,7 +14,7 @@ import cPickle as pickle
 from fast_jtnn import *
 import rdkit
 
-lg = rdkit.RDLogger.logger() 
+lg = rdkit.RDLogger.logger()
 lg.setLevel(rdkit.RDLogger.CRITICAL)
 
 parser = argparse.ArgumentParser()
@@ -43,13 +43,18 @@ parser.add_argument('--kl_anneal_iter', type=int, default=2000)
 parser.add_argument('--print_iter', type=int, default=50)
 parser.add_argument('--save_iter', type=int, default=5000)
 
+has_cuda = torch.cuda.is_available()
+
 args = parser.parse_args()
 print args
 
-vocab = [x.strip("\r\n ") for x in open(args.vocab)] 
+vocab = [x.strip("\r\n ") for x in open(args.vocab)]
 vocab = Vocab(vocab)
 
-model = JTNNVAE(vocab, args.hidden_size, args.latent_size, args.depthT, args.depthG).cuda()
+if has_cuda:
+    model = JTNNVAE(vocab, args.hidden_size, args.latent_size, args.depthT, args.depthG).cuda()
+else:
+    model = JTNNVAE(vocab, args.hidden_size, args.latent_size, args.depthT, args.depthG)
 print model
 
 for param in model.parameters():
