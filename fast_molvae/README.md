@@ -16,7 +16,7 @@ This gives you the vocabulary of cluster labels over the dataset `train.txt`.
 ## Training
 Step 1: Preprocess the data:
 ```
-python preprocess.py --train ../data/moses/train.txt --split 100 --jobs 16
+python preprocess_tox21.py --train ../data/tox21/train.csv --data_col 13
 mkdir moses-processed
 mv tensor* moses-processed
 ```
