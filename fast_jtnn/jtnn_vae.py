@@ -14,16 +14,28 @@ import rdkit
 import rdkit.Chem as Chem
 import copy, math
 
+import numpy as np
+
+import sys
+sys.path.append('../probtorch')
+import probtorch
+
 class JTNNVAE(nn.Module):
 
-    def __init__(self, vocab, hidden_size, latent_size, depthT, depthG):
+    def __init__(self, vocab, hidden_size, latent_size, y_size, depthT, depthG, alpha, temp=0.66):
         super(JTNNVAE, self).__init__()
         self.vocab = vocab
         self.hidden_size = hidden_size
         self.latent_size = latent_size = latent_size / 2 #Tree and Mol has two vectors
+        self.y_size = y_size
 
         self.jtnn = JTNNEncoder(hidden_size, depthT, nn.Embedding(vocab.size(), hidden_size))
         self.decoder = JTNNDecoder(vocab, hidden_size, latent_size, nn.Embedding(vocab.size(), hidden_size))
+
+        self.classifier = nn.Sequential(
+            nn.Linear(hidden_size*2, y_size),
+            nn.Softmax())
+        self.classification_loss = nn.CrossEntropyLoss()
 
         self.jtmpn = JTMPN(hidden_size, depthG)
         self.mpn = MPN(hidden_size, depthG)
@@ -31,10 +43,13 @@ class JTNNVAE(nn.Module):
         self.A_assm = nn.Linear(latent_size, hidden_size, bias=False)
         self.assm_loss = nn.CrossEntropyLoss(size_average=False)
 
-        self.T_mean = nn.Linear(hidden_size, latent_size)
-        self.T_var = nn.Linear(hidden_size, latent_size)
-        self.G_mean = nn.Linear(hidden_size, latent_size)
-        self.G_var = nn.Linear(hidden_size, latent_size)
+        self.T_mean = nn.Linear(hidden_size+y_size, latent_size)
+        self.T_var = nn.Linear(hidden_size+y_size, latent_size)
+        self.G_mean = nn.Linear(hidden_size+y_size, latent_size)
+        self.G_var = nn.Linear(hidden_size+y_size, latent_size)
+
+        self.alpha = alpha
+        self.temp = temp
 
     def encode(self, jtenc_holder, mpn_holder):
         tree_vecs, tree_mess = self.jtnn(*jtenc_holder)
@@ -56,7 +71,8 @@ class JTNNVAE(nn.Module):
         mol_var = -torch.abs(self.G_var(mol_vecs))
         return torch.cat([tree_mean, mol_mean], dim=1), torch.cat([tree_var, mol_var], dim=1)
 
-    def rsample(self, z_vecs, W_mean, W_var):
+    def rsample(self, z_vecs, y_hat, W_mean, W_var):
+        z_vecs = torch.cat((z_vecs, y_hat), 1)
         batch_size = z_vecs.size(0)
         z_mean = W_mean(z_vecs)
         z_log_var = -torch.abs(W_var(z_vecs)) #Following Mueller et al.
@@ -74,17 +90,32 @@ class JTNNVAE(nn.Module):
 
         return self.decode(z_tree, z_mol, prob_decode)
 
-    def forward(self, x_batch, beta):
+    def forward(self, x_batch, y_batch, beta):
         x_batch, x_jtenc_holder, x_mpn_holder, x_jtmpn_holder = x_batch
         x_tree_vecs, x_tree_mess, x_mol_vecs = self.encode(x_jtenc_holder, x_mpn_holder)
-        z_tree_vecs,tree_kl = self.rsample(x_tree_vecs, self.T_mean, self.T_var)
-        z_mol_vecs,mol_kl = self.rsample(x_mol_vecs, self.G_mean, self.G_var)
+
+        y_hat = self.classifier(torch.cat((x_tree_vecs, x_mol_vecs), 1))
+
+        z_tree_vecs, tree_kl = self.rsample(x_tree_vecs, y_hat, self.T_mean, self.T_var)
+        z_mol_vecs, mol_kl = self.rsample(x_mol_vecs, y_hat, self.G_mean, self.G_var)
 
         kl_div = tree_kl + mol_kl
         word_loss, topo_loss, word_acc, topo_acc = self.decoder(x_batch, z_tree_vecs)
         assm_loss, assm_acc = self.assm(x_batch, x_jtmpn_holder, z_mol_vecs, x_tree_mess)
 
-        return word_loss + topo_loss + assm_loss + beta * kl_div, kl_div.item(), word_acc, topo_acc, assm_acc
+        classification_loss = 0
+        y_hat_entropy = 0
+        if y_batch is not None:
+            target = np.argmax(y_batch, axis=1)
+            classification_loss = self.classification_loss(y_hat, target)
+        else:
+            y_hat_entropy = torch.sum(y_hat * torch.log(y_hat))
+
+        loss = word_loss + topo_loss + assm_loss + beta * kl_div + \
+            classification_loss * self.alpha + \
+            y_hat_entropy
+
+        return loss, kl_div.item(), word_acc, topo_acc, assm_acc
 
     def assm(self, mol_batch, jtmpn_holder, x_mol_vecs, x_tree_mess):
         jtmpn_holder,batch_idx = jtmpn_holder
