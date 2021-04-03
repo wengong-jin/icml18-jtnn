@@ -90,6 +90,35 @@ class JTNNVAE(nn.Module):
 
         return self.decode(z_tree, z_mol, prob_decode)
 
+    def kl_loss(x, x_decoded_mean, z_mean=z_mean, z_log_var=z_log_var):
+        kl_loss = - 0.5 * K.sum(1. + z_log_var - K.square(z_mean) - K.exp(z_log_var), axis=-1)
+
+        return K.mean(kl_loss)
+
+    def logxy_loss(x, x_decoded_mean):
+        x = K.flatten(x)
+        x_decoded_mean = K.flatten(x_decoded_mean)
+        xent_loss = img_rows * img_cols * img_chns * metrics.binary_crossentropy(x, x_decoded_mean)
+
+        # p(y) for observed data is equally distributed
+        logy = np.log(1. / num_classes)
+
+        return xent_loss - logy
+
+    def labeled_vae_loss(x, x_decoded_mean):
+        return logxy_loss(x, x_decoded_mean) + kl_loss(x, x_decoded_mean)
+
+    def cls_loss(y, y_pred, N=1000):
+        alpha = 0.1 * N
+        return alpha * metrics.categorical_crossentropy(y, y_pred)
+
+    def unlabeled_vae_loss(x, x_decoded_mean):
+        entropy = metrics.categorical_crossentropy(_y_output, _y_output)
+        # This is probably not correct, see discussion here: https://github.com/bjlkeng/sandbox/issues/3
+        labeled_loss = logxy_loss(x, x_decoded_mean) + kl_loss(x, x_decoded_mean)
+
+        return K.mean(K.sum(_y_output * labeled_loss, axis=-1)) + entropy
+
     def forward(self, x_batch, y_batch, beta):
         x_batch, x_jtenc_holder, x_mpn_holder, x_jtmpn_holder = x_batch
         x_tree_vecs, x_tree_mess, x_mol_vecs = self.encode(x_jtenc_holder, x_mpn_holder)
