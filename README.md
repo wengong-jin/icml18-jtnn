@@ -2,6 +2,9 @@
 
 Official implementation of our Junction Tree Variational Autoencoder [https://arxiv.org/abs/1802.04364](https://arxiv.org/abs/1802.04364)
 
+# Update
+We have made architecture improvements to JT-VAE. We recommend you to check our new repository at https://github.com/wengong-jin/hgraph2graph/. This repo contains a molecular language model pre-trained on ChEMBL (1.8 million compounds) and scripts for property-guided molecule generation. All scripts are written in python 3.7 and pytorch.
+
 # Accelerated Version
 We have accelerated our code! The new code is in `fast_jtnn/`, and the VAE training script is in `fast_molvae/`. Please refer to `fast_molvae/README.md` for details.
 
