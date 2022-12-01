@@ -1,13 +1,19 @@
 import rdkit
 import rdkit.Chem as Chem
+import numpy as np
 from chemutils import get_clique_mol, tree_decomp, get_mol, get_smiles, set_atommap, enum_assemble, decode_stereo
 from vocab import *
 
 class MolTreeNode(object):
 
-    def __init__(self, smiles, clique=[]):
+    def __init__(self, smiles, vocab, clique=[]):
         self.smiles = smiles
         self.mol = get_mol(self.smiles)
+        
+        # I don't have jax in this env. But jax.nn.one_hot would solve it faster
+        if vocab:
+            self.feat_vec = np.zeros(len(vocab)) 
+            self.feat_vec[vocab[smiles]] = 1
 
         self.clique = [x for x in clique] #copy
         self.neighbors = []
@@ -59,7 +65,7 @@ class MolTreeNode(object):
 
 class MolTree(object):
 
-    def __init__(self, smiles):
+    def __init__(self, smiles, vocab=None):
         self.smiles = smiles
         self.mol = get_mol(smiles)
 
@@ -70,11 +76,13 @@ class MolTree(object):
         #self.stereo_cands = decode_stereo(self.smiles2D)
 
         cliques, edges = tree_decomp(self.mol)
+        self.edges = edges
+        
         self.nodes = []
         root = 0
         for i,c in enumerate(cliques):
             cmol = get_clique_mol(self.mol, c)
-            node = MolTreeNode(get_smiles(cmol), c)
+            node = MolTreeNode(get_smiles(cmol), vocab, c)
             self.nodes.append(node)
             if min(c) == 0: root = i
 
@@ -86,7 +94,7 @@ class MolTree(object):
             self.nodes[0],self.nodes[root] = self.nodes[root],self.nodes[0]
 
         for i,node in enumerate(self.nodes):
-            node.nid = i + 1
+            node.nid = i # + 1 #--> I don't know why id needs to start from 1. Maybe it's important somewhere else
             if len(node.neighbors) > 1: #Leaf node mol is not marked
                 set_atommap(node.mol, node.nid)
             node.is_leaf = (len(node.neighbors) == 1)
