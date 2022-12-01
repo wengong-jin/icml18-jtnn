@@ -1,3 +1,5 @@
+import os
+os.environ["PYTHONPATH"] = "~/Users/maykcaldas/Documents/WhiteLab/pep2mol/icml18-jtnn"
 
 import rdkit
 import numpy as np
@@ -7,8 +9,6 @@ import sys
 lg = rdkit.RDLogger.logger() 
 lg.setLevel(rdkit.RDLogger.CRITICAL)
 
-VERBOSE=0
-CREATE_VOC=False
 
 def create_voc(smiles):
     voc = set()
@@ -43,57 +43,61 @@ def hide_leafs(tree, prob, vocab):
         for nei in node.neighbors:
             nei.is_leaf = (np.sum([n.smiles != 'null' for n in nei.neighbors]) == 1)
 
+def main():
+    VERBOSE=False
+    CREATE_VOC=False
+    # mols_list = sys.stdin.readlines()
+    mols_list = []
+    i=0
+    with open('validation-db.json', 'r') as f:
+        for line in f:
+            i+=1
+            mols_list.append(json.loads(line)['text'])
+            if i>1000:
+                break
 
-mols_list = sys.stdin.readlines()
-# mols_list = []
-# with open('train-db.json', 'r') as f:
-#     for line in f:
-#         mols_list.append(json.loads(line)['text'])
 
-if CREATE_VOC:
-    voc = create_voc(mols_list)
-    stoi = {c:i for i,c in enumerate(voc)}
-    with open("vocab.json", "w") as f:
-        json.dump(dict(vocab=list(voc), vocab_stoi=stoi), f)
-else:
-    with open("vocab.json", "r") as f:
-        json_file = json.load(f)
-        voc = json_file['vocab']
-        stoi = json_file['vocab_stoi']
-
-if VERBOSE:
-    print("vocab: ", voc)
-    print("stoi: ", stoi)
-
-mols = [MolTree(mol, stoi) for mol in mols_list]
-print(mols)
-for mol in mols:
-    print(mol.smiles)
-    print(mol.size(),"nodes: ",  [stoi[n.smiles] for n in mol.nodes]) #[n.smiles for n in mol.nodes])
-    print(len(mol.edges),"edges: ", mol.edges)
+    if CREATE_VOC:
+        voc = create_voc(mols_list)
+        stoi = {c:i for i,c in enumerate(voc)}
+        with open("vocab.json", "w") as f:
+            json.dump(dict(vocab=list(voc), vocab_stoi=stoi), f)
+    else:
+        with open("vocab.json", "r") as f:
+            json_file = json.load(f)
+            voc = json_file['vocab']
+            stoi = json_file['vocab_stoi']
 
     if VERBOSE:
-        for node in mol.nodes:
-            print("{}:{:>10s} {}".format(node.nid, node.smiles, np.array(node.feat_vec)))
+        print("vocab: ", voc)
+        print("stoi: ", stoi)
 
-    add_noise(mol, 0, 0.01)
-    for _ in range(3):
-        hide_leafs(mol, 0.2, stoi)
+    mols=[]
+    for mol in mols_list:
+        try:
+            mols.append(MolTree(mol, stoi))
+        except:
+            pass
 
-    if VERBOSE:
-        with np.printoptions(precision=4):
+    print(f"we had {len(mols_list)} mols, but {len(mols)} were valid")
+
+    for mol in mols:
+        # print(mol.smiles)
+        # print(mol.size(),"nodes: ",  [stoi[n.smiles] for n in mol.nodes]) #[n.smiles for n in mol.nodes])
+        # print(len(mol.edges),"edges: ", mol.edges)
+
+        if VERBOSE:
             for node in mol.nodes:
                 print("{}:{:>10s} {}".format(node.nid, node.smiles, np.array(node.feat_vec)))
 
-'''
-TODO
-- [X] Add noise to the features (randomly?)
-        Probably just do (avoid negative noise) self.feat_vec += max(0, np.random.normal(0.5, 0.01, self.feat_vec.shape))
-- [X] Turn some leafs into null
-    - [X] Once a leaf is null, nodes connected to it may become leafs
-    - [X] Re-assign leafs once a leaf is set to null
-- [X] Get a vocab for chembl and coconut
-- [ ] 
-- [ ] 
-- [ ] 
-'''
+        add_noise(mol, 0, 0.01)
+        for _ in range(3):
+            hide_leafs(mol, 0.1, stoi)
+
+        if VERBOSE:
+            with np.printoptions(precision=4):
+                for node in mol.nodes:
+                    print("{}:{:>10s} {}".format(node.nid, node.smiles, np.array(node.feat_vec)))
+
+if __name__ == "__main__":
+    main
