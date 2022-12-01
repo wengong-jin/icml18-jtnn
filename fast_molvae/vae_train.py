@@ -9,7 +9,7 @@ import math, random, sys
 import numpy as np
 import argparse
 from collections import deque
-import cPickle as pickle
+import pickle as pickle
 
 from fast_jtnn import *
 import rdkit
@@ -44,13 +44,13 @@ parser.add_argument('--print_iter', type=int, default=50)
 parser.add_argument('--save_iter', type=int, default=5000)
 
 args = parser.parse_args()
-print args
+print(args)
 
 vocab = [x.strip("\r\n ") for x in open(args.vocab)] 
 vocab = Vocab(vocab)
 
 model = JTNNVAE(vocab, args.hidden_size, args.latent_size, args.depthT, args.depthG).cuda()
-print model
+print(model)
 
 for param in model.parameters():
     if param.dim() == 1:
@@ -61,7 +61,7 @@ for param in model.parameters():
 if args.load_epoch > 0:
     model.load_state_dict(torch.load(args.save_dir + "/model.iter-" + str(args.load_epoch)))
 
-print "Model #Params: %dK" % (sum([x.nelement() for x in model.parameters()]) / 1000,)
+print("Model #Params: %dK" % (sum([x.nelement() for x in model.parameters()]) / 1000,))
 
 optimizer = optim.Adam(model.parameters(), lr=args.lr)
 scheduler = lr_scheduler.ExponentialLR(optimizer, args.anneal_rate)
@@ -74,7 +74,7 @@ total_step = args.load_epoch
 beta = args.beta
 meters = np.zeros(4)
 
-for epoch in xrange(args.epoch):
+for epoch in range(args.epoch):
     loader = MolTreeFolder(args.train, vocab, args.batch_size, num_workers=4)
     for batch in loader:
         total_step += 1
@@ -85,14 +85,14 @@ for epoch in xrange(args.epoch):
             nn.utils.clip_grad_norm_(model.parameters(), args.clip_norm)
             optimizer.step()
         except Exception as e:
-            print e
+            print(e)
             continue
 
         meters = meters + np.array([kl_div, wacc * 100, tacc * 100, sacc * 100])
 
         if total_step % args.print_iter == 0:
             meters /= args.print_iter
-            print "[%d] Beta: %.3f, KL: %.2f, Word: %.2f, Topo: %.2f, Assm: %.2f, PNorm: %.2f, GNorm: %.2f" % (total_step, beta, meters[0], meters[1], meters[2], meters[3], param_norm(model), grad_norm(model))
+            print("[%d] Beta: %.3f, KL: %.2f, Word: %.2f, Topo: %.2f, Assm: %.2f, PNorm: %.2f, GNorm: %.2f" % (total_step, beta, meters[0], meters[1], meters[2], meters[3], param_norm(model), grad_norm(model)))
             sys.stdout.flush()
             meters *= 0
 
@@ -101,7 +101,7 @@ for epoch in xrange(args.epoch):
 
         if total_step % args.anneal_iter == 0:
             scheduler.step()
-            print "learning rate: %.6f" % scheduler.get_lr()[0]
+            print("learning rate: %.6f" % scheduler.get_lr()[0])
 
         if total_step % args.kl_anneal_iter == 0 and total_step >= args.warmup:
             beta = min(args.max_beta, beta + args.step_beta)

@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import rdkit
 import numpy as np
 import json
@@ -7,7 +7,7 @@ import sys
 lg = rdkit.RDLogger.logger() 
 lg.setLevel(rdkit.RDLogger.CRITICAL)
 
-VERBOSE=False
+VERBOSE=0
 CREATE_VOC=False
 
 def create_voc(smiles):
@@ -45,10 +45,10 @@ def hide_leafs(tree, prob, vocab):
 
 
 mols_list = sys.stdin.readlines()
-mols_list = []
-with open('train-db.json', 'r') as f:
-    for line in f:
-        mols_list.append(json.loads(line)['text'])
+# mols_list = []
+# with open('train-db.json', 'r') as f:
+#     for line in f:
+#         mols_list.append(json.loads(line)['text'])
 
 if CREATE_VOC:
     voc = create_voc(mols_list)
@@ -65,26 +65,25 @@ if VERBOSE:
     print("vocab: ", voc)
     print("stoi: ", stoi)
 
-# mols = [MolTree(mol, stoi) for mol in mols_list]
+mols = [MolTree(mol, stoi) for mol in mols_list]
+print(mols)
+for mol in mols:
+    print(mol.smiles)
+    print(mol.size(),"nodes: ",  [stoi[n.smiles] for n in mol.nodes]) #[n.smiles for n in mol.nodes])
+    print(len(mol.edges),"edges: ", mol.edges)
 
-# for mol in mols:
-#     print
-#     print mol.smiles
-#     print mol.size(),"nodes: ",  [stoi[n.smiles] for n in mol.nodes] #[n.smiles for n in mol.nodes]
-#     print len(mol.edges),"edges: ", mol.edges
+    if VERBOSE:
+        for node in mol.nodes:
+            print("{}:{:>10s} {}".format(node.nid, node.smiles, np.array(node.feat_vec)))
 
-#     if VERBOSE:
-#         for node in mol.nodes:
-#             print "{}:{:>10s} {}".format(node.nid, node.smiles, np.array(node.feat_vec))
+    add_noise(mol, 0, 0.01)
+    for _ in range(3):
+        hide_leafs(mol, 0.2, stoi)
 
-#     add_noise(mol, 0, 0.01)
-#     for _ in range(3):
-#         hide_leafs(mol, 0.2, stoi)
-
-#     if VERBOSE:
-#         with np.printoptions(precision=4):
-#             for node in mol.nodes:
-#                 print "{}:{:>10s} {}".format(node.nid, node.smiles, np.array(node.feat_vec))
+    if VERBOSE:
+        with np.printoptions(precision=4):
+            for node in mol.nodes:
+                print("{}:{:>10s} {}".format(node.nid, node.smiles, np.array(node.feat_vec)))
 
 '''
 TODO

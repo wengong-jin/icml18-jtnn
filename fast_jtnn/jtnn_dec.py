@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mol_tree import Vocab, MolTree, MolTreeNode
-from nnutils import create_var, GRU
-from chemutils import enum_assemble, set_atommap
+from .mol_tree import Vocab, MolTree, MolTreeNode
+from .nnutils import create_var, GRU
+from .chemutils import enum_assemble, set_atommap
 import copy
 
 MAX_NB = 15
@@ -67,13 +67,13 @@ class JTNNDecoder(nn.Module):
         batch_size = len(mol_batch)
         pred_hiddens.append(create_var(torch.zeros(len(mol_batch),self.hidden_size)))
         pred_targets.extend([mol_tree.nodes[0].wid for mol_tree in mol_batch])
-        pred_contexts.append( create_var( torch.LongTensor(range(batch_size)) ) )
+        pred_contexts.append( create_var( torch.LongTensor(list(range(batch_size))) ) )
 
         max_iter = max([len(tr) for tr in traces])
         padding = create_var(torch.zeros(self.hidden_size), False)
         h = {}
 
-        for t in xrange(max_iter):
+        for t in range(max_iter):
             prop_list = []
             batch_list = []
             for i,plist in enumerate(traces):
@@ -159,7 +159,7 @@ class JTNNDecoder(nn.Module):
 
         stop_hidden = torch.cat([cur_x,cur_o], dim=1)
         stop_hiddens.append( stop_hidden )
-        stop_contexts.append( create_var( torch.LongTensor(range(batch_size)) ) )
+        stop_contexts.append( create_var( torch.LongTensor(list(range(batch_size))) ) )
         stop_targets.extend( [0] * len(mol_batch) )
 
         #Predict next clique
@@ -208,7 +208,7 @@ class JTNNDecoder(nn.Module):
 
         all_nodes = [root]
         h = {}
-        for step in xrange(MAX_DECODE_LEN):
+        for step in range(MAX_DECODE_LEN):
             node_x,fa_slot = stack[-1]
             cur_h_nei = [ h[(node_y.idx,node_x.idx)] for node_y in node_x.neighbors ]
             if len(cur_h_nei) > 0:
@@ -301,7 +301,7 @@ def have_slots(fa_slots, ch_slots):
 
     if len(matches) == 0: return False
 
-    fa_match,ch_match = zip(*matches)
+    fa_match,ch_match = list(zip(*matches))
     if len(set(fa_match)) == 1 and 1 < len(fa_slots) <= 2: #never remove atom from ring
         fa_slots.pop(fa_match[0])
     if len(set(ch_match)) == 1 and 1 < len(ch_slots) <= 2: #never remove atom from ring
@@ -333,7 +333,7 @@ def can_assemble(node_x, node_y):
 if __name__ == "__main__":
     smiles = ["O=C1[C@@H]2C=C[C@@H](C=CC2)C1(c1ccccc1)c1ccccc1","O=C([O-])CC[C@@]12CCCC[C@]1(O)OC(=O)CC2", "ON=C1C[C@H]2CC3(C[C@@H](C1)c1ccccc12)OCCO3", "C[C@H]1CC(=O)[C@H]2[C@@]3(O)C(=O)c4cccc(O)c4[C@@H]4O[C@@]43[C@@H](O)C[C@]2(O)C1", 'Cc1cc(NC(=O)CSc2nnc3c4ccccc4n(C)c3n2)ccc1Br', 'CC(C)(C)c1ccc(C(=O)N[C@H]2CCN3CCCc4cccc2c43)cc1', "O=c1c2ccc3c(=O)n(-c4nccs4)c(=O)c4ccc(c(=O)n1-c1nccs1)c2c34", "O=C(N1CCc2c(F)ccc(F)c2C1)C1(O)Cc2ccccc2C1"]
     for s in smiles:
-        print s
+        print(s)
         tree = MolTree(s)
         for i,node in enumerate(tree.nodes):
             node.idx = i
@@ -341,5 +341,5 @@ if __name__ == "__main__":
         stack = []
         dfs(stack, tree.nodes[0], -1)
         for x,y,d in stack:
-            print x.smiles, y.smiles, d
-        print '------------------------------'
+            print(x.smiles, y.smiles, d)
+        print('------------------------------')

@@ -42,7 +42,7 @@ for param in model.parameters():
         nn.init.xavier_normal(param)
 
 model = model.cuda()
-print "Model #Params: %dK" % (sum([x.nelement() for x in model.parameters()]) / 1000,)
+print("Model #Params: %dK" % (sum([x.nelement() for x in model.parameters()]) / 1000,))
 
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 scheduler = lr_scheduler.ExponentialLR(optimizer, 0.9)
@@ -53,7 +53,7 @@ dataset = MoleculeDataset(opts.train_path)
 MAX_EPOCH = 3
 PRINT_ITER = 20
 
-for epoch in xrange(MAX_EPOCH):
+for epoch in range(MAX_EPOCH):
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=lambda x:x, drop_last=True)
 
     word_acc,topo_acc,assm_acc,steo_acc = 0,0,0,0
@@ -81,11 +81,11 @@ for epoch in xrange(MAX_EPOCH):
             assm_acc = assm_acc / PRINT_ITER * 100
             steo_acc = steo_acc / PRINT_ITER * 100
 
-            print "KL: %.1f, Word: %.2f, Topo: %.2f, Assm: %.2f, Steo: %.2f" % (kl_div, word_acc, topo_acc, assm_acc, steo_acc)
+            print("KL: %.1f, Word: %.2f, Topo: %.2f, Assm: %.2f, Steo: %.2f" % (kl_div, word_acc, topo_acc, assm_acc, steo_acc))
             word_acc,topo_acc,assm_acc,steo_acc = 0,0,0,0
             sys.stdout.flush()
 
     scheduler.step()
-    print "learning rate: %.6f" % scheduler.get_lr()[0]
+    print("learning rate: %.6f" % scheduler.get_lr()[0])
     torch.save(model.state_dict(), opts.save_path + "/model.iter-" + str(epoch))
 

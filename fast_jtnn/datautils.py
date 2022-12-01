@@ -1,11 +1,11 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
-from mol_tree import MolTree
+from .mol_tree import MolTree
 import numpy as np
-from jtnn_enc import JTNNEncoder
-from mpn import MPN
-from jtmpn import JTMPN
-import cPickle as pickle
+from .jtnn_enc import JTNNEncoder
+from .mpn import MPN
+from .jtmpn import JTMPN
+import pickle as pickle
 import os, random
 
 class PairTreeFolder(object):
@@ -31,7 +31,7 @@ class PairTreeFolder(object):
             if self.shuffle: 
                 random.shuffle(data) #shuffle data before batch
 
-            batches = [data[i : i + self.batch_size] for i in xrange(0, len(data), self.batch_size)]
+            batches = [data[i : i + self.batch_size] for i in range(0, len(data), self.batch_size)]
             if len(batches[-1]) < self.batch_size:
                 batches.pop()
 
@@ -66,7 +66,7 @@ class MolTreeFolder(object):
             if self.shuffle: 
                 random.shuffle(data) #shuffle data before batch
 
-            batches = [data[i : i + self.batch_size] for i in xrange(0, len(data), self.batch_size)]
+            batches = [data[i : i + self.batch_size] for i in range(0, len(data), self.batch_size)]
             if len(batches[-1]) < self.batch_size:
                 batches.pop()
 
@@ -89,7 +89,7 @@ class PairTreeDataset(Dataset):
         return len(self.data)
     
     def __getitem__(self, idx):
-        batch0, batch1 = zip(*self.data[idx])
+        batch0, batch1 = list(zip(*self.data[idx]))
         return tensorize(batch0, self.vocab, assm=False), tensorize(batch1, self.vocab, assm=self.y_assm)
 
 class MolTreeDataset(Dataset):

@@ -1,5 +1,5 @@
 from torch.utils.data import Dataset
-from mol_tree import MolTree
+from .mol_tree import MolTree
 import numpy as np
 
 class MoleculeDataset(Dataset):

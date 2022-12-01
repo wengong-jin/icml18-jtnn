@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from collections import deque
-from mol_tree import Vocab, MolTree
-from nnutils import create_var, index_select_ND
+from .mol_tree import Vocab, MolTree
+from .nnutils import create_var, index_select_ND
 
 class JTNNEncoder(nn.Module):
 
@@ -63,8 +63,8 @@ class JTNNEncoder(nn.Module):
                 mess_dict[(x.idx,y.idx)] = len(messages)
                 messages.append( (x,y) )
 
-        node_graph = [[] for i in xrange(len(node_batch))]
-        mess_graph = [[] for i in xrange(len(messages))]
+        node_graph = [[] for i in range(len(node_batch))]
+        mess_graph = [[] for i in range(len(messages))]
         fmess = [0] * len(messages)
 
         for x,y in messages[1:]:
@@ -109,7 +109,7 @@ class GraphGRU(nn.Module):
         mask = torch.ones(h.size(0), 1)
         mask[0] = 0 #first vector is padding
         mask = create_var(mask)
-        for it in xrange(self.depth):
+        for it in range(self.depth):
             h_nei = index_select_ND(h, 0, mess_graph)
             sum_h = h_nei.sum(dim=1)
             z_input = torch.cat([x, sum_h], dim=1)

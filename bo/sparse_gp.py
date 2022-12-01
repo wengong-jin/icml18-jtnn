@@ -2,7 +2,7 @@
 # This class represents a node within the network
 #
 
-from __future__ import print_function
+
 
 import theano
 import theano.tensor as T
@@ -33,7 +33,7 @@ def global_optimization(grid, lower, upper, function_grid, function_scalar, func
         gradient_value = function_scalar_gradient(X).flatten()
         return np.float(value), gradient_value.astype(np.float)
 
-    lbfgs_bounds = zip(lower.tolist(), upper.tolist())
+    lbfgs_bounds = list(zip(lower.tolist(), upper.tolist()))
     x_optimal, y_opt, opt_info = spo.fmin_l_bfgs_b(objective, X_initial, bounds = lbfgs_bounds, iprint = 0, maxiter = 150)
     x_optimal = x_optimal.reshape((1, grid.shape[ 1 ]))
 

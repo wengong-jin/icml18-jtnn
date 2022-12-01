@@ -4,7 +4,7 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree
 from collections import defaultdict
 from rdkit.Chem.EnumerateStereoisomers import EnumerateStereoisomers, StereoEnumerationOptions
-from vocab import Vocab
+from .vocab import Vocab
 
 MST_MAX_WEIGHT = 100 
 MAX_NCAND = 2000
@@ -87,13 +87,13 @@ def tree_decomp(mol):
     ssr = [list(x) for x in Chem.GetSymmSSSR(mol)]
     cliques.extend(ssr)
 
-    nei_list = [[] for i in xrange(n_atoms)]
-    for i in xrange(len(cliques)):
+    nei_list = [[] for i in range(n_atoms)]
+    for i in range(len(cliques)):
         for atom in cliques[i]:
             nei_list[atom].append(i)
     
     #Merge Rings with intersection > 2 atoms
-    for i in xrange(len(cliques)):
+    for i in range(len(cliques)):
         if len(cliques[i]) <= 2: continue
         for atom in cliques[i]:
             for j in nei_list[atom]:
@@ -105,14 +105,14 @@ def tree_decomp(mol):
                     cliques[j] = []
     
     cliques = [c for c in cliques if len(c) > 0]
-    nei_list = [[] for i in xrange(n_atoms)]
-    for i in xrange(len(cliques)):
+    nei_list = [[] for i in range(n_atoms)]
+    for i in range(len(cliques)):
         for atom in cliques[i]:
             nei_list[atom].append(i)
     
     #Build edges and add singleton cliques
     edges = defaultdict(int)
-    for atom in xrange(n_atoms):
+    for atom in range(n_atoms):
         if len(nei_list[atom]) <= 1: 
             continue
         cnei = nei_list[atom]
@@ -129,24 +129,24 @@ def tree_decomp(mol):
             for c1 in cnei:
                 edges[(c1,c2)] = MST_MAX_WEIGHT - 1
         else:
-            for i in xrange(len(cnei)):
-                for j in xrange(i + 1, len(cnei)):
+            for i in range(len(cnei)):
+                for j in range(i + 1, len(cnei)):
                     c1,c2 = cnei[i],cnei[j]
                     inter = set(cliques[c1]) & set(cliques[c2])
                     if edges[(c1,c2)] < len(inter):
                         edges[(c1,c2)] = len(inter) #cnei[i] < cnei[j] by construction
 
-    edges = [u + (MST_MAX_WEIGHT-v,) for u,v in edges.iteritems()]
+    edges = [u + (MST_MAX_WEIGHT-v,) for u,v in edges.items()]
     if len(edges) == 0:
         return cliques, edges
 
     #Compute Maximum Spanning Tree
-    row,col,data = zip(*edges)
+    row,col,data = list(zip(*edges))
     n_clique = len(cliques)
     clique_graph = csr_matrix( (data,(row,col)), shape=(n_clique,n_clique) )
     junc_tree = minimum_spanning_tree(clique_graph)
     row,col = junc_tree.nonzero()
-    edges = [(row[i],col[i]) for i in xrange(len(row))]
+    edges = [(row[i],col[i]) for i in range(len(row))]
     return (cliques, edges)
 
 def atom_equal(a1, a2):
@@ -347,7 +347,7 @@ def dfs_assemble(cur_mol, global_amap, fa_amap, cur_node, fa_node):
     cur_amap = [(fa_nid,a2,a1) for nid,a1,a2 in fa_amap if nid == cur_node.nid]
     cands = enum_assemble(cur_node, neighbors, prev_nodes, cur_amap)
 
-    cand_smiles,cand_amap = zip(*cands)
+    cand_smiles,cand_amap = list(zip(*cands))
     label_idx = cand_smiles.index(cur_node.label)
     label_amap = cand_amap[label_idx]
 
@@ -363,7 +363,7 @@ def dfs_assemble(cur_mol, global_amap, fa_amap, cur_node, fa_node):
 
 if __name__ == "__main__":
     import sys
-    from mol_tree import MolTree
+    from .mol_tree import MolTree
     lg = rdkit.RDLogger.logger() 
     lg.setLevel(rdkit.RDLogger.CRITICAL)
     
@@ -373,10 +373,10 @@ if __name__ == "__main__":
         for s in sys.stdin:
             s = s.split()[0]
             tree = MolTree(s)
-            print '-------------------------------------------'
-            print s
+            print('-------------------------------------------')
+            print(s)
             for node in tree.nodes:
-                print node.smiles, [x.smiles for x in node.neighbors]
+                print(node.smiles, [x.smiles for x in node.neighbors])
 
     def decode_test():
         wrong = 0
@@ -398,9 +398,9 @@ if __name__ == "__main__":
 
             gold_smiles = Chem.MolToSmiles(Chem.MolFromSmiles(s))
             if gold_smiles != dec_smiles:
-                print gold_smiles, dec_smiles
+                print(gold_smiles, dec_smiles)
                 wrong += 1
-            print wrong, tot + 1
+            print(wrong, tot + 1)
 
     def enum_test():
         for s in sys.stdin:
@@ -410,9 +410,9 @@ if __name__ == "__main__":
             tree.assemble()
             for node in tree.nodes:
                 if node.label not in node.cands:
-                    print tree.smiles
-                    print node.smiles, [x.smiles for x in node.neighbors]
-                    print node.label, len(node.cands)
+                    print(tree.smiles)
+                    print(node.smiles, [x.smiles for x in node.neighbors])
+                    print(node.label, len(node.cands))
 
     def count():
         cnt,n = 0,0

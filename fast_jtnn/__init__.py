@@ -1,4 +1,4 @@
-from mol_tree import Vocab, MolTree
+from .mol_tree import Vocab, MolTree
 # from jtnn_vae import JTNNVAE
 # from jtnn_enc import JTNNEncoder
 # from jtmpn import JTMPN
