@@ -72,11 +72,24 @@ class MolTree(object):
         cliques, edges = tree_decomp(self.mol)
         self.nodes = []
         root = 0
-        for i,c in enumerate(cliques):
-            cmol = get_clique_mol(self.mol, c)
-            node = MolTreeNode(get_smiles(cmol), c)
-            self.nodes.append(node)
-            if min(c) == 0: root = i
+        for i, c in enumerate(cliques):
+            try:
+                cmol = get_clique_mol(self.mol, c)
+                if cmol is None:
+                    continue
+
+                smiles = get_smiles(cmol)
+                if smiles is None or len(smiles) == 0:
+                    continue
+
+                node = MolTreeNode(smiles, c)
+                self.nodes.append(node)
+
+                if min(c) == 0:
+                    root = len(self.nodes) - 1  # IMPORTANT FIX
+
+            except Exception as e:
+                continue
 
         for x,y in edges:
             self.nodes[x].add_neighbor(self.nodes[y])
